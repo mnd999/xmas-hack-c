@@ -13,7 +13,6 @@ json_t *root;
 
 static int callback_xmas(struct lws *wsi, enum lws_callback_reasons reason,
 	void *user, void *in, size_t len) {
-	fprintf(stderr, "callback %d\n", reason);
 	switch (reason) {
 		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
 			wsi_xmas = NULL;

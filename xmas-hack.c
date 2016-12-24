@@ -63,7 +63,8 @@ struct pos {
 
 struct gps {
 	double distance;
-	struct pos pos;
+	double x;
+	double y;
 };
 
 void getCurrentGpsPos(struct gps retval[3]) {
@@ -71,17 +72,19 @@ void getCurrentGpsPos(struct gps retval[3]) {
 	if (root != NULL) {
 		gpss = json_object_get(root, "gpss");
 		for (int i = 0; i < json_array_size(gpss); i++) {
-			json_t *gps;
+			json_t *gps, *coords;
 			gps = json_array_get(gpss, i);
 			retval[i].distance = json_real_value(json_object_get(gps, "distance"));
-			retval[i].pos.x = json_real_value(json_object_get(gps, "x"));
-			retval[i].pos.y = json_real_value(json_object_get(gps, "y"));
+			coords = json_object_get(gps, "position");
+			retval[i].x = json_integer_value(json_object_get(coords, "x"));
+			retval[i].y = json_integer_value(json_object_get(coords, "y"));
+// lwsl_info("gps: d %f, x %f, y %f\n", retval[i].distance, retval[i].x, retval[i].y);
 		}		
 
 	}
 }
 
-bool calculateThreeCircleIntersection(struct pos retval, double x0, double y0, double r0,
+bool calculateThreeCircleIntersection(struct pos *retval, double x0, double y0, double r0,
                                                            double x1, double y1, double r1,
                                                            double x2, double y2, double r2) {
 	double dx, dy, d, d1, d2, a, point2_x, point2_y, h, rx, ry;
@@ -99,10 +102,12 @@ bool calculateThreeCircleIntersection(struct pos retval, double x0, double y0, d
 	/* Check for solvability. */
         if (d > (r0 + r1))
         {
+	    lwsl_info("false 1: %f, %f", r0, r1);
             return false;
         }
         if (d < fabs(r0 - r1))
         {
+	    lwsl_info("false 2: %f < %f - %f  dx=%f dy=%f\n", d, r0, r1, x1, y1);
             return false;
         }
 
@@ -145,13 +150,13 @@ bool calculateThreeCircleIntersection(struct pos retval, double x0, double y0, d
         d2 = sqrt((dy*dy) + (dx*dx));
 
         if(fabs(d1 - r2) < EPSILON) {
-		retval.x = intersectionPoint1_x;
-		retval.y = intersectionPoint1_y;
+		retval->x = intersectionPoint1_x;
+		retval->y = intersectionPoint1_y;
 		return true;
         }
         else if(fabs(d2 - r2) < EPSILON) {
-		retval.x = intersectionPoint2_x;
-		retval.y = intersectionPoint2_y;
+		retval->x = intersectionPoint2_x;
+		retval->y = intersectionPoint2_y;
 		return true;
         }
         else {
@@ -177,6 +182,26 @@ void checkName(const char *name) {
 	lwsl_info("need to set name\n");	
 	sprintf(nameMsg, "{\"tag\":\"SetName\", \"contents\":\"%s\"}", name);
 	lws_write(wsi_xmas, nameMsg, strlen(nameMsg), LWS_WRITE_TEXT);
+}
+
+void moveMeTo(const char *name, struct pos dest) {
+	json_t *me, *position;
+	double x, y;
+	char moveMsg[255];
+	int dx, dy;
+
+	me = getPlayer(name);
+	position = json_object_get(me, "position");
+	x = json_real_value(json_object_get(position, "x"));
+	y = json_real_value(json_object_get(position, "y"));
+
+	dx = round(dest.x - x);
+	dy = round(dest.y - y);
+
+	sprintf(moveMsg, "{\"tag\":\"Move\",\"contents\":{\"x\":%d,\"y\":%d}}", dx, dy);
+	lwsl_info("%s\n", moveMsg);
+
+	lws_write(wsi_xmas, moveMsg, strlen(moveMsg), LWS_WRITE_TEXT);
 }
 
 int main(int argc, const char **argv) {
@@ -232,11 +257,13 @@ int main(int argc, const char **argv) {
 			struct pos intersect;
 			checkName(name);
 			getCurrentGpsPos(&satellites);
-			calculateThreeCircleIntersection(intersect, 
-				satellites[0].pos.x, satellites[0].pos.y, satellites[0].distance,
-				satellites[1].pos.x, satellites[1].pos.y, satellites[1].distance,
-				satellites[2].pos.x, satellites[2].pos.y, satellites[2].distance);
-			lwsl_info("(%d, %d)\n", intersect.x, intersect.y);
+			if (calculateThreeCircleIntersection(&intersect, 
+				satellites[0].x, satellites[0].y, satellites[0].distance,
+				satellites[1].x, satellites[1].y, satellites[1].distance,
+				satellites[2].x, satellites[2].y, satellites[2].distance)) {
+				lwsl_info("intersect (%f, %f)\n", intersect.x, intersect.y);
+				moveMeTo(name, intersect);
+			}
 		}
 	}
 

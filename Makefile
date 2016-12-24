@@ -1,5 +1,5 @@
 CC=clang
-LIBS=-lwebsockets -ljansson
+LIBS=-lwebsockets -ljansson -lm
 LIBDIR=/usr/local/lib
 INCDIR=/usr/local/include
 

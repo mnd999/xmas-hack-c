@@ -170,7 +170,7 @@ void checkName(const char *name) {
 
 	lwsl_info("need to set name\n");	
 	snprintf(nameMsg, sizeof(nameMsg), "{\"tag\":\"SetName\", \"contents\":\"%s\"}", name);
-	lws_write(wsi_xmas, nameMsg, strlen(nameMsg), LWS_WRITE_TEXT);
+	lws_write(wsi_xmas, (unsigned char *) nameMsg, strlen(nameMsg), LWS_WRITE_TEXT);
 }
 
 void moveMeTo(const char *name, struct pos dest) {
@@ -190,7 +190,7 @@ void moveMeTo(const char *name, struct pos dest) {
 	snprintf(moveMsg, sizeof(moveMsg), "{\"tag\":\"Move\",\"contents\":{\"x\":%d,\"y\":%d}}", dx, dy);
 	lwsl_info("%s\n", moveMsg);
 
-	lws_write(wsi_xmas, moveMsg, strlen(moveMsg), LWS_WRITE_TEXT);
+	lws_write(wsi_xmas, (unsigned char *) moveMsg, strlen(moveMsg), LWS_WRITE_TEXT);
 }
 
 int main(int argc, const char **argv) {

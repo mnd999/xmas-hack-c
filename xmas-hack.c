@@ -57,7 +57,7 @@ struct gps {
 	double y;
 };
 
-void getCurrentGpsPos(struct gps retval[3]) {
+void getCurrentGpsPos(struct gps *retval) {
 	json_t *gpss;
 	if (root != NULL) {
 		gpss = json_object_get(root, "gpss");
@@ -170,7 +170,7 @@ void checkName(const char *name) {
 	if (getPlayer(name) != NULL) return;
 
 	lwsl_info("need to set name\n");	
-	sprintf(nameMsg, "{\"tag\":\"SetName\", \"contents\":\"%s\"}", name);
+	snprintf(nameMsg, sizeof(nameMsg), "{\"tag\":\"SetName\", \"contents\":\"%s\"}", name);
 	lws_write(wsi_xmas, nameMsg, strlen(nameMsg), LWS_WRITE_TEXT);
 }
 
@@ -188,7 +188,7 @@ void moveMeTo(const char *name, struct pos dest) {
 	dx = round(dest.x - x);
 	dy = round(dest.y - y);
 
-	sprintf(moveMsg, "{\"tag\":\"Move\",\"contents\":{\"x\":%d,\"y\":%d}}", dx, dy);
+	snprintf(moveMsg, sizeof(moveMsg), "{\"tag\":\"Move\",\"contents\":{\"x\":%d,\"y\":%d}}", dx, dy);
 	lwsl_info("%s\n", moveMsg);
 
 	lws_write(wsi_xmas, moveMsg, strlen(moveMsg), LWS_WRITE_TEXT);
@@ -246,7 +246,7 @@ int main(int argc, const char **argv) {
 		if (root != NULL) {
 			struct pos intersect;
 			checkName(name);
-			getCurrentGpsPos(&satellites);
+			getCurrentGpsPos(satellites);
 			if (calculateThreeCircleIntersection(&intersect, 
 				satellites[0].x, satellites[0].y, satellites[0].distance,
 				satellites[1].x, satellites[1].y, satellites[1].distance,

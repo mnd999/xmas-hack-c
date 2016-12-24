@@ -30,16 +30,6 @@ static int callback_xmas(struct lws *wsi, enum lws_callback_reasons reason,
 	
 			break;
 
-		case LWS_CALLBACK_RECEIVE_CLIENT_HTTP: {
-			char buffer[1024 + LWS_PRE];
-			char *px = buffer + LWS_PRE;
-			int lenx = sizeof(buffer) - LWS_PRE;
-			if (lws_http_client_read(wsi, &px, &lenx) < 0)
-				return -1;
-			while (lenx--)
-				putchar(*px++);
-			break;
-		}
 		default:
 			break;
 	}

@@ -173,6 +173,22 @@ void checkName(const char *name) {
 	lws_write(wsi_xmas, (unsigned char *) nameMsg, strlen(nameMsg), LWS_WRITE_TEXT);
 }
 
+void checkColour(const char *name, const char *colour) {
+	char colourMsg[255];
+	json_t *player, *colourJ;
+        player = getPlayer(name);
+	if (player != NULL) {
+		colourJ = json_object_get(player, "color");
+		if (json_is_null(colourJ) || strcmp(colour, json_string_value(colourJ)) ) {
+			lwsl_info("need to set colour\n");
+			snprintf(colourMsg, sizeof(colourMsg), "{\"tag\":\"SetColor\", \"contents\":\"%s\"}", colour);
+			lwsl_info("%s\n", colourMsg);
+			lws_write(wsi_xmas, (unsigned char *) colourMsg, strlen(colourMsg), LWS_WRITE_TEXT);
+		}
+	}
+
+}
+
 void moveMeTo(const char *name, struct pos dest) {
 	json_t *me, *position;
 	double x, y;
@@ -245,6 +261,7 @@ int main(int argc, const char **argv) {
 		if (root != NULL) {
 			struct pos intersect;
 			checkName(name);
+			checkColour(name, "#0077EE");
 			getCurrentGpsPos(satellites);
 			if (calculateThreeCircleIntersection(&intersect, 
 				satellites[0].x, satellites[0].y, satellites[0].distance,

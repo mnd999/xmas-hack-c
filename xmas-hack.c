@@ -242,7 +242,7 @@ int main(int argc, const char **argv) {
 		return 1;
 	}
 
-	fprintf(stderr, "connecting to %s:%d\n", i.address, i.port);
+	lwsl_info("connecting to %s:%d\n", i.address, i.port);
 
 	i.context = context;	
 	i.path = "/";

@@ -1,7 +1,8 @@
 CC=clang
 LIBS=-lwebsockets -ljansson -lm
-LIBDIR=/usr/local/lib
-INCDIR=/usr/local/include
+PREFIX=/usr/local
+LIBDIR=${PREFIX}/lib
+INCDIR=${PREFIX}/include
 
 
 xmashack: xmas-hack.c
